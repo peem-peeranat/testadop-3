@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Timer</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            font-size: 2em;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let interval;
+        let visibilityCount = 0;
+        let isTimerRunning = false;
+
+        function formatTime(elapsed) {
+            let minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            let seconds = String(elapsed % 60).padStart(2, '0');
+            return `${minutes}:${seconds}`;
+        }
+
+        function formatDate() {
+            let date = new Date();
+            return `${String(date.getFullYear()).padStart(4, '0')}:${String(date.getMonth() + 1).padStart(2, '0')}:${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function resetTimer() {
+            clearInterval(interval);
+            window.parent.postMessage({ timerUpdate: '00:00' }, '*');
+            isTimerRunning = false;
+        }
+
+        function startTimer() {
+            let startTime = Date.now();
+            interval = setInterval(() => {
+                let elapsed = Math.floor((Date.now() - startTime) / 1000);
+                let formattedTime = formatTime(elapsed);
+                window.parent.postMessage({ timerUpdate: formattedTime }, '*');
+            }, 1000);
+            isTimerRunning = true;
+        }
+
+        window.addEventListener('message', function(event) {
+            if (event.data === 'start') {
+                visibilityCount++;
+                if (visibilityCount % 3 === 0) {
+                    resetTimer();
+                    window.parent.postMessage({ timerUpdate: formatDate() }, '*');
+                } else {
+                    resetTimer();
+                    startTimer();
+                }
+            } else if (event.data === 'stop') {
+                resetTimer();
+            }
+        });
+    </script>
+</body>
+</html>
